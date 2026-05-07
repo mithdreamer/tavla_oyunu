@@ -2,7 +2,7 @@ body{
     margin:0;
     padding:20px;
     background:#f3e7c3;
-    font-family:Arial;
+    font-family:Arial, sans-serif;
     text-align:center;
 }
 
@@ -11,6 +11,9 @@ h1{
 }
 
 canvas{
+    width:100%;
+    max-width:960px;
+    aspect-ratio:3 / 2;
     background:#d9b97a;
     border:8px solid #704b1b;
     border-radius:10px;

@@ -1,7 +1,6 @@
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
-const TRI_W = 60;
 const CHECKER_R = 20;
 
 let currentPlayer = "W";
@@ -203,12 +202,10 @@ function xyToPoint(x,y){
     const triW = (boardW - boardW * 0.044) / 12;
 
     if(y < boardH / 2){
-        // Üst sağ taraf
         let col = Math.floor((boardW - x) / triW);
         if(col < 0 || col > 11) return null;
         return 12 + col;
     }else{
-        // Alt sol taraf
         let col = Math.floor(x / triW);
         if(col < 0 || col > 11) return null;
         return 11 - col;
@@ -228,7 +225,6 @@ canvas.addEventListener("click",(e)=>{
     if(point===null)
         return;
 
-    // taş seç
     if(selectedPoint===null){
 
         if(
@@ -245,7 +241,6 @@ canvas.addEventListener("click",(e)=>{
         return;
     }
 
-    // hedef seç
     let moveDistance =
         Math.abs(point-selectedPoint);
 
