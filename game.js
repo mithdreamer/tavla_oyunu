@@ -180,13 +180,22 @@ function rollDice(){
     let d2 =
         Math.floor(Math.random()*6)+1;
 
-    diceValues = [d1,d2];
-
-    setStatus(
-        currentPlayer +
-        " zar attı: " +
-        d1 + " - " + d2
-    );
+    if(d1 === d2){
+        diceValues = [d1, d1, d1, d1];
+        setStatus(
+            currentPlayer +
+            " çift attı: " +
+            d1 + " - " + d2 +
+            " (4 hamle hakkı)"
+        );
+    } else {
+        diceValues = [d1, d2];
+        setStatus(
+            currentPlayer +
+            " zar attı: " +
+            d1 + " - " + d2
+        );
+    }
 }
 
 function setStatus(text){
