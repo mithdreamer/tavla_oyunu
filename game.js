@@ -10,7 +10,26 @@ let selectedPoint = null;
 
 let diceValues = [];
 
+let boardWidth = canvas.clientWidth;
+let boardHeight = canvas.clientHeight;
+
 const board = Array(24).fill().map(()=>[]);
+
+function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    if(rect.width === 0 || rect.height === 0)
+        return;
+
+    boardWidth = rect.width;
+    boardHeight = rect.height;
+
+    const scale = window.devicePixelRatio || 1;
+    canvas.width = Math.round(boardWidth * scale);
+    canvas.height = Math.round(boardHeight * scale);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+    redraw();
+}
 
 function initBoard(){
 
@@ -27,9 +46,9 @@ function initBoard(){
 
 function drawBoard(){
 
-    const boardW = canvas.width;
-    const boardH = canvas.height;
-    const barW = 40;
+    const boardW = boardWidth;
+    const boardH = boardHeight;
+    const barW = boardW * 0.044;
     const triW = (boardW - barW) / 12;
     const triH = boardH * 0.366;
 
@@ -78,11 +97,14 @@ function drawBoard(){
 
 function pointToXY(point, level){
 
-    const boardW = canvas.width;
-    const boardH = canvas.height;
-    const barW = 40;
+    const boardW = boardWidth;
+    const boardH = boardHeight;
+    const barW = boardW * 0.044;
     const triW = (boardW - barW) / 12;
     const xOffset = triW / 2;
+    const marginY = boardH * 0.066;
+    const maxLevels = 5;
+    const yStep = Math.min(boardH * 0.075, (boardH / 2 - marginY * 1.5) / maxLevels);
 
     let displayIndex =
         point <=11 ? 11-point : point-12;
@@ -98,12 +120,9 @@ function pointToXY(point, level){
     let y;
 
     if(point<=11){
-
-        y = boardH - 40 - level*45;
-
+        y = boardH - marginY - level * yStep;
     }else{
-
-        y = 40 + level*45;
+        y = marginY + level * yStep;
     }
 
     return {x,y};
@@ -179,9 +198,9 @@ function setStatus(text){
 
 function xyToPoint(x,y){
 
-    const boardW = canvas.width;
-    const boardH = canvas.height;
-    const triW = (boardW - 40) / 12;
+    const boardW = boardWidth;
+    const boardH = boardHeight;
+    const triW = (boardW - boardW * 0.044) / 12;
 
     if(y < boardH / 2){
         // Üst sağ taraf
@@ -203,11 +222,6 @@ canvas.addEventListener("click",(e)=>{
 
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
-
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    x *= scaleX;
-    y *= scaleY;
 
     let point = xyToPoint(x,y);
 
@@ -283,10 +297,11 @@ function resetGame(){
 
     currentPlayer="W";
 
-    redraw();
+    resizeCanvas();
 
     setStatus("Oyun sıfırlandı");
 }
 
 initBoard();
-redraw();
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
