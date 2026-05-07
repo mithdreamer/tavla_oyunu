@@ -27,24 +27,30 @@ function initBoard(){
 
 function drawBoard(){
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const boardW = canvas.width;
+    const boardH = canvas.height;
+    const barW = 40;
+    const triW = (boardW - barW) / 12;
+    const triH = boardH * 0.366;
+
+    ctx.clearRect(0,0,boardW,boardH);
 
     ctx.fillStyle = "#d9b97a";
-    ctx.fillRect(0,0,900,600);
+    ctx.fillRect(0,0,boardW,boardH);
 
     ctx.fillStyle = "#704b1b";
-    ctx.fillRect(430,0,40,600);
+    ctx.fillRect((boardW - barW) / 2,0,barW,boardH);
 
     // Alt kısım sol üçgenler (point 0-11)
     for(let i=0;i<12;i++){
 
-        let x=i*60;
+        let x = i * triW;
 
         ctx.beginPath();
 
-        ctx.moveTo(x,600);
-        ctx.lineTo(x+60,600);
-        ctx.lineTo(x+30,380);
+        ctx.moveTo(x,boardH);
+        ctx.lineTo(x+triW,boardH);
+        ctx.lineTo(x+triW/2,boardH - triH);
 
         ctx.fillStyle =
             i%2===0 ? "#6d4c41" : "#a55f22";
@@ -55,13 +61,13 @@ function drawBoard(){
     // Üst kısım sağ üçgenler (point 12-23)
     for(let i=0;i<12;i++){
 
-        let x=900 - (i+1)*60;
+        let x = boardW - (i+1) * triW;
 
         ctx.beginPath();
 
         ctx.moveTo(x,0);
-        ctx.lineTo(x-60,0);
-        ctx.lineTo(x-30,220);
+        ctx.lineTo(x+triW,0);
+        ctx.lineTo(x+triW/2,triH);
 
         ctx.fillStyle =
             i%2===0 ? "#a55f22" : "#6d4c41";
@@ -72,22 +78,28 @@ function drawBoard(){
 
 function pointToXY(point, level){
 
+    const boardW = canvas.width;
+    const boardH = canvas.height;
+    const barW = 40;
+    const triW = (boardW - barW) / 12;
+    const xOffset = triW / 2;
+
     let displayIndex =
         point <=11 ? 11-point : point-12;
 
     let x;
 
     if(point <=11){
-        x = displayIndex*60 + 30;
+        x = displayIndex * triW + xOffset;
     }else{
-        x = 900 - (displayIndex+1)*60 + 30;
+        x = boardW - (displayIndex + 1) * triW + xOffset;
     }
 
     let y;
 
     if(point<=11){
 
-        y = 560 - level*45;
+        y = boardH - 40 - level*45;
 
     }else{
 
@@ -167,15 +179,19 @@ function setStatus(text){
 
 function xyToPoint(x,y){
 
-    if(y<300){
+    const boardW = canvas.width;
+    const boardH = canvas.height;
+    const triW = (boardW - 40) / 12;
+
+    if(y < boardH / 2){
         // Üst sağ taraf
-        let col = Math.floor((900 - x)/60);
-        if(col<0 || col>11) return null;
+        let col = Math.floor((boardW - x) / triW);
+        if(col < 0 || col > 11) return null;
         return 12 + col;
     }else{
         // Alt sol taraf
-        let col = Math.floor(x/60);
-        if(col<0 || col>11) return null;
+        let col = Math.floor(x / triW);
+        if(col < 0 || col > 11) return null;
         return 11 - col;
     }
 }
@@ -185,10 +201,15 @@ canvas.addEventListener("click",(e)=>{
     let rect =
         canvas.getBoundingClientRect();
 
-    let x=e.clientX-rect.left;
-    let y=e.clientY-rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
 
-    let point=xyToPoint(x,y);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    x *= scaleX;
+    y *= scaleY;
+
+    let point = xyToPoint(x,y);
 
     if(point===null)
         return;
