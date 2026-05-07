@@ -1,0 +1,39 @@
+body{
+    margin:0;
+    padding:20px;
+    background:#f3e7c3;
+    font-family:Arial;
+    text-align:center;
+}
+
+h1{
+    color:#5b3a12;
+}
+
+canvas{
+    background:#d9b97a;
+    border:8px solid #704b1b;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:8px;
+    background:#704b1b;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    margin:5px;
+}
+
+button:hover{
+    background:#52340f;
+}
+
+.status{
+    margin-top:15px;
+    font-size:20px;
+    font-weight:bold;
+}
