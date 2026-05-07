@@ -2,13 +2,10 @@ const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
 let currentPlayer = "W";
-
 let selectedPoint = null;
-
 let diceValues = [];
 
-let boardWidth = canvas.clientWidth;
-let boardHeight = canvas.clientHeight;
+let boardWidth, boardHeight;
 
 const board = Array(24).fill().map(()=>[]);
 
@@ -16,13 +13,8 @@ function resizeCanvas(){
     boardWidth = canvas.clientWidth;
     boardHeight = canvas.clientHeight;
 
-    if(boardWidth === 0 || boardHeight === 0)
-        return;
-
-    const scale = window.devicePixelRatio || 1;
-    canvas.width = Math.round(boardWidth * scale);
-    canvas.height = Math.round(boardHeight * scale);
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    canvas.width = boardWidth;
+    canvas.height = boardHeight;
 
     redraw();
 }
@@ -44,49 +36,61 @@ function drawBoard(){
 
     const boardW = boardWidth;
     const boardH = boardHeight;
-    const barW = boardW * 0.044;
-    const triW = (boardW - barW) / 12;
-    const triH = boardH * 0.366;
+
+    const barW = boardW * 0.05;
+    const sideW = (boardW - barW) / 2;
+    const triW = sideW / 6;
+    const triH = boardH * 0.42;
 
     ctx.clearRect(0,0,boardW,boardH);
 
-    ctx.fillStyle = "#d9b97a";
+    let gradient = ctx.createLinearGradient(0,0,boardW,boardH);
+    gradient.addColorStop(0,"#d2a679");
+    gradient.addColorStop(1,"#b07a3a");
+
+    ctx.fillStyle = gradient;
     ctx.fillRect(0,0,boardW,boardH);
 
-    ctx.fillStyle = "#704b1b";
-    ctx.fillRect((boardW - barW) / 2,0,barW,boardH);
+    ctx.fillStyle = "#5a3e1b";
+    ctx.fillRect(sideW,0,barW,boardH);
 
-    // Alt kısım sol üçgenler (point 0-11)
+    // ALT
     for(let i=0;i<12;i++){
 
-        let x = i * triW;
+        let x;
+
+        if(i < 6){
+            x = i * triW;
+        } else {
+            x = sideW + barW + (i-6)*triW;
+        }
 
         ctx.beginPath();
-
         ctx.moveTo(x,boardH);
         ctx.lineTo(x+triW,boardH);
         ctx.lineTo(x+triW/2,boardH - triH);
 
-        ctx.fillStyle =
-            i%2===0 ? "#6d4c41" : "#a55f22";
-
+        ctx.fillStyle = i%2===0 ? "#8b0000" : "#f5deb3";
         ctx.fill();
     }
 
-    // Üst kısım sağ üçgenler (point 12-23)
+    // ÜST
     for(let i=0;i<12;i++){
 
-        let x = boardW - (i+1) * triW;
+        let x;
+
+        if(i < 6){
+            x = sideW - (i+1)*triW;
+        } else {
+            x = boardW - (i-5)*triW;
+        }
 
         ctx.beginPath();
-
         ctx.moveTo(x,0);
         ctx.lineTo(x+triW,0);
         ctx.lineTo(x+triW/2,triH);
 
-        ctx.fillStyle =
-            i%2===0 ? "#a55f22" : "#6d4c41";
-
+        ctx.fillStyle = i%2===0 ? "#f5deb3" : "#8b0000";
         ctx.fill();
     }
 }
@@ -95,32 +99,41 @@ function pointToXY(point, level){
 
     const boardW = boardWidth;
     const boardH = boardHeight;
-    const barW = boardW * 0.044;
-    const triW = (boardW - barW) / 12;
-    const triH = boardH * 0.366;
+
+    const barW = boardW * 0.05;
+    const sideW = (boardW - barW) / 2;
+    const triW = sideW / 6;
+    const triH = boardH * 0.42;
+
     const xOffset = triW / 2;
     const marginY = triH * 0.1;
-    const availableH = triH - marginY;
-    const yStep = availableH / 5; // max 5 levels
-
-    let displayIndex =
-        point <=11 ? 11-point : point-12;
+    const yStep = (triH - marginY) / 5;
 
     let x;
 
-    if(point <=11){
-        x = displayIndex * triW + xOffset;
-    }else{
-        x = boardW - (displayIndex + 1) * triW + xOffset;
+    if(point <= 11){
+        let idx = 11 - point;
+
+        if(idx < 6){
+            x = idx * triW + xOffset;
+        } else {
+            x = sideW + barW + (idx-6)*triW + xOffset;
+        }
+    } else {
+        let idx = point - 12;
+
+        if(idx < 6){
+            x = sideW - (idx+1)*triW + xOffset;
+        } else {
+            x = boardW - (idx-5)*triW + xOffset;
+        }
     }
 
     let y;
 
-    if(point<=11){
-        // Alt üçgen: tabandan tepeye
+    if(point <= 11){
         y = boardH - marginY - level * yStep;
-    }else{
-        // Üst üçgen: tabandan tepeye
+    } else {
         y = marginY + level * yStep;
     }
 
@@ -129,192 +142,56 @@ function pointToXY(point, level){
 
 function drawCheckers(){
 
-    const checkerR = Math.min(boardWidth, boardHeight) * 0.02;
+    const checkerR = Math.min(boardWidth, boardHeight) * 0.025;
 
     for(let p=0;p<24;p++){
 
         for(let i=0;i<board[p].length;i++){
 
             let c = board[p][i];
-
             let pos = pointToXY(p,i);
 
             ctx.beginPath();
-
             ctx.arc(pos.x,pos.y,checkerR,0,Math.PI*2);
 
-            ctx.fillStyle =
-                c==="W" ? "white" : "black";
-
+            ctx.fillStyle = c==="W" ? "white" : "black";
             ctx.fill();
 
             ctx.strokeStyle="#333";
             ctx.lineWidth=2;
             ctx.stroke();
-
-            if(selectedPoint===p){
-
-                ctx.strokeStyle="cyan";
-                ctx.lineWidth=4;
-                ctx.stroke();
-            }
         }
     }
 }
 
 function redraw(){
-
     drawBoard();
     drawCheckers();
 }
 
 function rollDice(){
+    let d1 = Math.floor(Math.random()*6)+1;
+    let d2 = Math.floor(Math.random()*6)+1;
 
-    if(diceValues.length>0){
+    diceValues = d1===d2 ? [d1,d1,d1,d1] : [d1,d2];
 
-        setStatus("Önce mevcut hamleyi yap.");
-        return;
-    }
-
-    let d1 =
-        Math.floor(Math.random()*6)+1;
-
-    let d2 =
-        Math.floor(Math.random()*6)+1;
-
-    if(d1 === d2){
-        diceValues = [d1, d1, d1, d1];
-        setStatus(
-            currentPlayer +
-            " çift attı: " +
-            d1 + " - " + d2 +
-            " (4 hamle hakkı)"
-        );
-    } else {
-        diceValues = [d1, d2];
-        setStatus(
-            currentPlayer +
-            " zar attı: " +
-            d1 + " - " + d2
-        );
-    }
+    setStatus("Zar: " + d1 + " - " + d2);
 }
 
 function setStatus(text){
-
-    document.getElementById("status")
-        .innerText=text;
+    document.getElementById("status").innerText=text;
 }
-
-function xyToPoint(x,y){
-
-    const boardW = boardWidth;
-    const boardH = boardHeight;
-    const triW = (boardW - boardW * 0.044) / 12;
-
-    if(y < boardH / 2){
-        let col = Math.floor((boardW - x) / triW);
-        if(col < 0 || col > 11) return null;
-        return 12 + col;
-    }else{
-        let col = Math.floor(x / triW);
-        if(col < 0 || col > 11) return null;
-        return 11 - col;
-    }
-}
-
-canvas.addEventListener("click",(e)=>{
-
-    let rect =
-        canvas.getBoundingClientRect();
-
-    let x = e.clientX - rect.left;
-    let y = e.clientY - rect.top;
-
-    const borderX = (rect.width - canvas.clientWidth) / 2;
-    const borderY = (rect.height - canvas.clientHeight) / 2;
-    x -= borderX;
-    y -= borderY;
-
-    const scale = canvas.width / canvas.clientWidth;
-    x *= scale;
-    y *= scale;
-
-    let point = xyToPoint(x,y);
-
-    if(point===null)
-        return;
-
-    if(selectedPoint===null){
-
-        if(
-            board[point].length>0 &&
-            board[point][board[point].length-1]
-            ===currentPlayer
-        ){
-
-            selectedPoint=point;
-
-            redraw();
-        }
-
-        return;
-    }
-
-    let moveDistance =
-        Math.abs(point-selectedPoint);
-
-    if(diceValues.includes(moveDistance)){
-
-        let piece=
-            board[selectedPoint].pop();
-
-        board[point].push(piece);
-
-        diceValues.splice(
-            diceValues.indexOf(moveDistance),
-            1
-        );
-
-        selectedPoint=null;
-
-        redraw();
-
-        if(diceValues.length===0){
-
-            currentPlayer =
-                currentPlayer==="W"
-                ? "B"
-                : "W";
-
-            setStatus(
-                "Sıra: " + currentPlayer
-            );
-        }
-
-    }else{
-
-        setStatus(
-            "Bu hamle için uygun zar yok."
-        );
-    }
-});
 
 function resetGame(){
 
-    for(let i=0;i<24;i++)
-        board[i]=[];
+    for(let i=0;i<24;i++) board[i]=[];
 
     initBoard();
-
     selectedPoint=null;
     diceValues=[];
-
     currentPlayer="W";
 
-    resizeCanvas();
-
-    setStatus("Oyun sıfırlandı");
+    redraw();
 }
 
 initBoard();
