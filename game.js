@@ -13,12 +13,11 @@ let boardHeight = canvas.clientHeight;
 const board = Array(24).fill().map(()=>[]);
 
 function resizeCanvas(){
-    const rect = canvas.getBoundingClientRect();
-    if(rect.width === 0 || rect.height === 0)
-        return;
+    boardWidth = canvas.clientWidth;
+    boardHeight = canvas.clientHeight;
 
-    boardWidth = rect.width;
-    boardHeight = rect.height;
+    if(boardWidth === 0 || boardHeight === 0)
+        return;
 
     const scale = window.devicePixelRatio || 1;
     canvas.width = Math.round(boardWidth * scale);
@@ -231,6 +230,15 @@ canvas.addEventListener("click",(e)=>{
 
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
+
+    const borderX = (rect.width - canvas.clientWidth) / 2;
+    const borderY = (rect.height - canvas.clientHeight) / 2;
+    x -= borderX;
+    y -= borderY;
+
+    const scale = canvas.width / canvas.clientWidth;
+    x *= scale;
+    y *= scale;
 
     let point = xyToPoint(x,y);
 
