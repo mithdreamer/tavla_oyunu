@@ -1,8 +1,6 @@
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
-const CHECKER_R = 20;
-
 let currentPlayer = "W";
 
 let selectedPoint = null;
@@ -100,10 +98,11 @@ function pointToXY(point, level){
     const boardH = boardHeight;
     const barW = boardW * 0.044;
     const triW = (boardW - barW) / 12;
+    const triH = boardH * 0.366;
     const xOffset = triW / 2;
-    const marginY = boardH * 0.066;
-    const maxLevels = 5;
-    const yStep = Math.min(boardH * 0.075, (boardH / 2 - marginY * 1.5) / maxLevels);
+    const marginY = triH * 0.1;
+    const availableH = triH - marginY;
+    const yStep = availableH / 5; // max 5 levels
 
     let displayIndex =
         point <=11 ? 11-point : point-12;
@@ -119,8 +118,10 @@ function pointToXY(point, level){
     let y;
 
     if(point<=11){
+        // Alt üçgen: tabandan tepeye
         y = boardH - marginY - level * yStep;
     }else{
+        // Üst üçgen: tabandan tepeye
         y = marginY + level * yStep;
     }
 
@@ -128,6 +129,8 @@ function pointToXY(point, level){
 }
 
 function drawCheckers(){
+
+    const checkerR = Math.min(boardWidth, boardHeight) * 0.02;
 
     for(let p=0;p<24;p++){
 
@@ -139,7 +142,7 @@ function drawCheckers(){
 
             ctx.beginPath();
 
-            ctx.arc(pos.x,pos.y,CHECKER_R,0,Math.PI*2);
+            ctx.arc(pos.x,pos.y,checkerR,0,Math.PI*2);
 
             ctx.fillStyle =
                 c==="W" ? "white" : "black";
