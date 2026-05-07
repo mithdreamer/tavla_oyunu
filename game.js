@@ -2,45 +2,45 @@ const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
 const TRI_W = 60;
-const TRI_H = 220;
+const CHECKER_R = 20;
 
 let currentPlayer = "W";
+
+let selectedPoint = null;
+
+let diceValues = [];
+
+const board = Array(24).fill().map(()=>[]);
+
+function initBoard(){
+
+    board[23] = ["W","W"];
+    board[12] = ["W","W","W","W","W"];
+    board[7] = ["W","W","W"];
+    board[5] = ["W","W","W","W","W"];
+
+    board[0] = ["B","B"];
+    board[11] = ["B","B","B","B","B"];
+    board[16] = ["B","B","B"];
+    board[18] = ["B","B","B","B","B"];
+}
 
 function drawBoard(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // zemin
     ctx.fillStyle = "#d9b97a";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillRect(0,0,900,600);
 
-    // orta bar
-    ctx.fillStyle = "#8b6b3f";
+    ctx.fillStyle = "#704b1b";
     ctx.fillRect(430,0,40,600);
 
-    // üst üçgenler
+    // Alt kısım sol üçgenler (point 0-11)
     for(let i=0;i<12;i++){
 
-        ctx.beginPath();
-
-        let x = i*60;
-
-        ctx.moveTo(x,0);
-        ctx.lineTo(x+60,0);
-        ctx.lineTo(x+30,220);
-
-        ctx.fillStyle =
-            i%2===0 ? "#a55f22" : "#6d4c41";
-
-        ctx.fill();
-    }
-
-    // alt üçgenler
-    for(let i=0;i<12;i++){
+        let x=i*60;
 
         ctx.beginPath();
-
-        let x = i*60;
 
         ctx.moveTo(x,600);
         ctx.lineTo(x+60,600);
@@ -51,52 +51,221 @@ function drawBoard(){
 
         ctx.fill();
     }
+
+    // Üst kısım sağ üçgenler (point 12-23)
+    for(let i=0;i<12;i++){
+
+        let x=900 - (i+1)*60;
+
+        ctx.beginPath();
+
+        ctx.moveTo(x,0);
+        ctx.lineTo(x-60,0);
+        ctx.lineTo(x-30,220);
+
+        ctx.fillStyle =
+            i%2===0 ? "#a55f22" : "#6d4c41";
+
+        ctx.fill();
+    }
 }
 
-function drawChecker(x,y,color){
+function pointToXY(point, level){
 
-    ctx.beginPath();
+    let displayIndex =
+        point <=11 ? 11-point : point-12;
 
-    ctx.arc(x,y,20,0,Math.PI*2);
+    let x;
 
-    ctx.fillStyle =
-        color==="W" ? "white" : "black";
+    if(point <=11){
+        x = displayIndex*60 + 30;
+    }else{
+        x = 900 - (displayIndex+1)*60 + 30;
+    }
 
-    ctx.fill();
+    let y;
 
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    if(point<=11){
+
+        y = 560 - level*45;
+
+    }else{
+
+        y = 40 + level*45;
+    }
+
+    return {x,y};
 }
 
-function placeStartCheckers(){
+function drawCheckers(){
 
-    drawChecker(30,30,"W");
-    drawChecker(30,75,"W");
+    for(let p=0;p<24;p++){
 
-    drawChecker(690,570,"B");
-    drawChecker(690,525,"B");
+        for(let i=0;i<board[p].length;i++){
+
+            let c = board[p][i];
+
+            let pos = pointToXY(p,i);
+
+            ctx.beginPath();
+
+            ctx.arc(pos.x,pos.y,CHECKER_R,0,Math.PI*2);
+
+            ctx.fillStyle =
+                c==="W" ? "white" : "black";
+
+            ctx.fill();
+
+            ctx.strokeStyle="#333";
+            ctx.lineWidth=2;
+            ctx.stroke();
+
+            if(selectedPoint===p){
+
+                ctx.strokeStyle="cyan";
+                ctx.lineWidth=4;
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function redraw(){
+
+    drawBoard();
+    drawCheckers();
 }
 
 function rollDice(){
 
-    let d1 = Math.floor(Math.random()*6)+1;
-    let d2 = Math.floor(Math.random()*6)+1;
+    if(diceValues.length>0){
 
-    document.getElementById("status").innerText =
+        setStatus("Önce mevcut hamleyi yap.");
+        return;
+    }
+
+    let d1 =
+        Math.floor(Math.random()*6)+1;
+
+    let d2 =
+        Math.floor(Math.random()*6)+1;
+
+    diceValues = [d1,d2];
+
+    setStatus(
         currentPlayer +
         " zar attı: " +
-        d1 + " - " + d2;
+        d1 + " - " + d2
+    );
 }
+
+function setStatus(text){
+
+    document.getElementById("status")
+        .innerText=text;
+}
+
+function xyToPoint(x,y){
+
+    if(y<300){
+        // Üst sağ taraf
+        let col = Math.floor((900 - x)/60);
+        if(col<0 || col>11) return null;
+        return 12 + col;
+    }else{
+        // Alt sol taraf
+        let col = Math.floor(x/60);
+        if(col<0 || col>11) return null;
+        return 11 - col;
+    }
+}
+
+canvas.addEventListener("click",(e)=>{
+
+    let rect =
+        canvas.getBoundingClientRect();
+
+    let x=e.clientX-rect.left;
+    let y=e.clientY-rect.top;
+
+    let point=xyToPoint(x,y);
+
+    if(point===null)
+        return;
+
+    // taş seç
+    if(selectedPoint===null){
+
+        if(
+            board[point].length>0 &&
+            board[point][board[point].length-1]
+            ===currentPlayer
+        ){
+
+            selectedPoint=point;
+
+            redraw();
+        }
+
+        return;
+    }
+
+    // hedef seç
+    let moveDistance =
+        Math.abs(point-selectedPoint);
+
+    if(diceValues.includes(moveDistance)){
+
+        let piece=
+            board[selectedPoint].pop();
+
+        board[point].push(piece);
+
+        diceValues.splice(
+            diceValues.indexOf(moveDistance),
+            1
+        );
+
+        selectedPoint=null;
+
+        redraw();
+
+        if(diceValues.length===0){
+
+            currentPlayer =
+                currentPlayer==="W"
+                ? "B"
+                : "W";
+
+            setStatus(
+                "Sıra: " + currentPlayer
+            );
+        }
+
+    }else{
+
+        setStatus(
+            "Bu hamle için uygun zar yok."
+        );
+    }
+});
 
 function resetGame(){
 
-    drawBoard();
-    placeStartCheckers();
+    for(let i=0;i<24;i++)
+        board[i]=[];
 
-    document.getElementById("status").innerText =
-        "Oyun sıfırlandı";
+    initBoard();
+
+    selectedPoint=null;
+    diceValues=[];
+
+    currentPlayer="W";
+
+    redraw();
+
+    setStatus("Oyun sıfırlandı");
 }
 
-drawBoard();
-placeStartCheckers();
+initBoard();
+redraw();
